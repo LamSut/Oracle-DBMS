@@ -1,0 +1,114 @@
+**xem vu number**
+
+-- 1
+create user user1 identified by 1
+default tablespace uses quota 2M on users;
+
+grant create table to user1 with admin option;
+
+-- 2
+create table nganh(
+	maNganh varchar2(15) primary key,
+	tenNganh varchar2(30)
+);
+
+create table tuyen(
+	stt int primary key,
+	maNganh varchar2(15) references nganh(maNganh)
+	toHop varchar2(30),
+	chiTieu int check (chiTieu>0),
+	constraint maCTU check (regexp_like(maNganh, '^\d{7}'))
+);
+
+-- 3
+insert into nganh values ('7140202', 'Giáo dục Tiểu học');
+insert into tuyen values (1, '7140202', 'A00, C01, D01, D03', 35);
+
+insert into nganh values ('7140204', 'Giáo dục Công dân');
+insert into tuyen values (2, '7140204', 'C00, C19, D14, D15', 20);
+
+insert into nganh values ('7140206', 'Giáo dục Thể chất');
+insert into tuyen values (3, '7140206', 'T00, T01', 20);
+
+insert into nganh values ('7140209', 'Sư phạm Toán học');
+insert into tuyen values (4, '7140209', 'A00, A01, D07, D08', 20);
+
+insert into nganh values ('7140210', 'Sư phạm Tin học');
+insert into tuyen values (5, '7140210', 'A00, A01, D01, D07', 25);
+
+insert into nganh values ('7140211', 'Sư phạm Vật lý');
+insert into tuyen values (6, '7140211', 'A00, A01, A02, D29', 20);
+
+insert into nganh values ('7140212', 'Sư phạm Hoá học');
+insert into tuyen values (7, '7140212', 'A00, B00, D07, D24', 20);
+
+insert into nganh values ('7140213', 'Sư phạm Sinh học');
+insert into tuyen values (8, '7140213', 'B00, D08', 20);
+
+insert into nganh values ('7140217', 'Sư phạm Ngữ văn');
+insert into tuyen values (9, '7140217', 'C00, D14, D15', 20);
+
+insert into nganh values ('7140218', 'Sư phạm Lịch sử');
+insert into tuyen values (10, '7140218', 'C00, D14, D64', 20);
+
+-- 4
+CREATE OR REPLACE PROCEDURE xemchitieu (pmanganh varchar2)  
+IS
+BEGIN
+    select manganh, chitieu from tuyen where manganh = pmanganh;
+END;	
+
+execute xemchitieu(&pmanganh);
+
+-- 5
+CREATE OR REPLACE PROCEDURE suachitieu (pmanganh varchar2, pchitieu int)  
+IS
+BEGIN
+    update tuyen set chitieu=pchitieu where manganh = pmanganh;
+END;	
+
+execute suachitieu();
+
+-- 6
+CREATE OR REPLACE FUNCTION hamxemchitieu(pmanganh varchar2)
+    RETURN NUMBER 
+IS
+    result number;
+BEGIN
+  SELECT chitieu INTO result FROM tuyen WHERE manganh = pmanganh;
+  RETURN result;
+END;
+
+SELECT hamxemchitieu() FROM dual;
+
+-- 7
+create table del_tuyen_log(
+    editUser varchar2(60),
+    editDate TIMESTAMP,
+    maNganh varchar2(15),
+);
+
+create table del_nganh_log(
+    editUser varchar2(60),
+    editDate TIMESTAMP,
+    maNganh varchar2(15),
+);
+
+CREATE OR REPLACE TRIGGER del_tuyen_trigger 
+ AFTER DELETE ON tuyen
+ FOR EACH ROW
+ BEGIN 
+   insert into del_log values(user,sysdate,:old.manganh);
+ END; 
+
+CREATE OR REPLACE TRIGGER del_nganh_trigger 
+ AFTER DELETE ON nganh
+ FOR EACH ROW
+ BEGIN 
+   insert into del_log values(user,sysdate,:old.manganh);
+ END; 
+
+select * from tuyen;
+delete from tuyen where manganh = '';
+select * from tuyen;
+select * from del_tuyen_trigger;
